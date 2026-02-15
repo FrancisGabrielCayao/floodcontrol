@@ -1,4 +1,4 @@
-:root {:root {
+:root {
     --bg: #0b0e14;
     --card: #161b26;
     --sidebar-bg: #111827;
@@ -184,6 +184,9 @@ body {
 
 .dropdown:hover .dropdown-content { 
     display: block; 
+    position: absolute;
+    top: 100%; 
+    left: 0;
 }
 
 .dropdown-content a { 
