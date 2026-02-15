@@ -9,103 +9,228 @@
     --border: #2d3748;
 }
 
-
-* { 
-    box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent; 
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
-
-body { 
-    margin: 0; 
-    background: var(--bg); 
-    color: var(--text); 
-    font-family: 'Segoe UI', system-ui, sans-serif; 
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    overflow-x: hidden;
 }
 
-
-/* --- Sidebar Mobile Fix --- */
-
-.sidebar {
-    position: fixed; 
-    top: 0; 
-    left: -300px; 
-    width: 280px; 
-    height: 100%;
-    background: #111827 !important; /* Forced dark background for mobile */
-    z-index: 2000; 
-    transition: 0.3s;
-    padding: 20px; 
-    border-right: 1px solid var(--border);
-    color: #ffffff;
+.navbar {
+    height: 60px;
+    background: #1f2937;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-
-.sidebar.active { 
-    left: 0; 
-}
-
-
-/* Fixes the "White out" text issue */
-.sidebar p, .sidebar h3, .sidebar small {
-    color: #ffffff !important;
-    display: block;
-    margin-bottom: 10px;
-}
-
-
-/* --- Actuator Buttons --- */
-
-.toggle-btn { 
-    width: 100%; 
-    padding: 15px; 
-    border: none; 
-    border-radius: 8px; 
-    font-weight: bold; 
-    margin-bottom: 20px;
+.menu-btn {
+    background: var(--accent);
+    border: none;
+    color: #000;
+    padding: 8px 15px;
     cursor: pointer;
+    border-radius: 6px;
+    font-weight: bold;
     font-size: 1rem;
 }
 
-
-.toggle-btn.off { 
-    background: #374151; 
-    color: white; 
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    z-index: 1500;
 }
 
-
-.toggle-btn.on { 
-    background: var(--accent); 
-    color: #000; 
+.overlay.active {
+    display: block;
 }
 
-
-/* --- Table & Filter Fix --- */
-
-.table-container { 
-    width: 100%; 
-    max-height: 400px; 
-    overflow-y: auto;  
-    overflow-x: auto;  
-    border-radius: 8px; 
-    border: 1px solid var(--border); 
-    background: #111827;
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    width: 280px;
+    height: 100%;
+    background: var(--sidebar-bg);
+    z-index: 2000;
+    transition: 0.3s;
+    padding: 20px;
+    border-right: 1px solid var(--border);
 }
 
-
-/* Mobile Dropdown Fix */
-.dropdown-content { 
-    display: none; 
-    position: absolute; 
-    background: #1f2937; 
-    min-width: 160px; 
-    z-index: 100; 
-    border: 1px solid var(--border); 
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+.sidebar.active {
+    left: 0;
 }
 
+.close-sidebar {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
 
-/* On mobile, we use the active class or hover for better compatibility */
-.dropdown:hover .dropdown-content, .dropdown:active .dropdown-content { 
-    display: block; 
+.tab-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    margin-top: 30px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 10px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.content-area {
+    padding: 15px;
+    max-width: 1300px;
+    margin: auto;
+}
+
+.glass-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.chart-box {
+    height: 200px;
+    width: 100%;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+}
+
+.rep-item {
+    background: #1f2937;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    border-bottom: 3px solid var(--border);
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.drop-btn {
+    background: #1f2937;
+    color: white;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background: #1f2937;
+    min-width: 140px;
+    z-index: 10;
+    right: 0;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content a {
+    color: white;
+    padding: 10px;
+    display: block;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.table-container {
+    max-height: 400px;
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.toggle-btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.toggle-btn.on {
+    background: var(--accent);
+    color: #000;
+}
+
+.toggle-btn.off {
+    background: #374151;
+    color: white;
+}
+
+.blink-danger {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
 }
