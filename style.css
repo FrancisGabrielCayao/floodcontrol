@@ -1,4 +1,4 @@
-:root {:root {
+:root {
     --bg: #0b0e14;
     --card: #161b26;
     --sidebar-bg: #111827;
@@ -21,11 +21,10 @@ body {
     background: var(--bg); 
     color: var(--text); 
     font-family: 'Segoe UI', system-ui, sans-serif; 
-    overflow-x: hidden; 
 }
 
 
-/* --- Mobile Sidebar Fix --- */
+/* --- Sidebar Mobile Fix --- */
 
 .sidebar {
     position: fixed; 
@@ -33,11 +32,12 @@ body {
     left: -300px; 
     width: 280px; 
     height: 100%;
-    background: #111827 !important; /* Explicit dark background */
+    background: #111827 !important; /* Forced dark background for mobile */
     z-index: 2000; 
     transition: 0.3s;
     padding: 20px; 
     border-right: 1px solid var(--border);
+    color: #ffffff;
 }
 
 
@@ -46,77 +46,11 @@ body {
 }
 
 
-/* Fixes the "white text on white" issue in sidebar */
-.sidebar p, .sidebar h3, .sidebar div {
-    color: #f3f4f6 !important; 
-}
-
-
-/* --- Filter Dropdown Mobile Fix --- */
-
-.dropdown { 
-    position: relative; 
-    display: inline-block; 
-}
-
-
-/* Prevents dropdown from being "stuck" open on mobile touch */
-.dropdown-content { 
-    display: none; 
-    position: absolute; 
-    background: #1f2937; 
-    min-width: 150px; 
-    z-index: 100; 
-    border: 1px solid var(--border); 
-    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-    border-radius: 6px;
-    top: 100%;
-}
-
-
-.dropdown:active .dropdown-content,
-.dropdown:focus-within .dropdown-content,
-.dropdown:hover .dropdown-content { 
-    display: block; 
-}
-
-
-.dropdown-content a { 
-    color: white; 
-    padding: 12px; 
-    text-decoration: none; 
-    display: block; 
-    border-bottom: 1px solid var(--border);
-}
-
-
-/* --- Mobile Table Scrolling --- */
-
-.table-container { 
-    width: 100%; 
-    max-height: 350px; /* PC-like scrolling on mobile */
-    overflow-y: auto;  
-    overflow-x: auto;  
-    border-radius: 8px; 
-    border: 1px solid var(--border); 
-    -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
-}
-
-
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    min-width: 600px; 
-}
-
-
-th { 
-    position: sticky; 
-    top: 0; 
-    background: #1f2937; 
-    color: #94a3b8;
-    z-index: 10; 
-    padding: 12px;
+/* Fixes the "White out" text issue */
+.sidebar p, .sidebar h3, .sidebar small {
+    color: #ffffff !important;
+    display: block;
+    margin-bottom: 10px;
 }
 
 
@@ -128,7 +62,9 @@ th {
     border: none; 
     border-radius: 8px; 
     font-weight: bold; 
-    margin-top: 10px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 
@@ -141,4 +77,35 @@ th {
 .toggle-btn.on { 
     background: var(--accent); 
     color: #000; 
+}
+
+
+/* --- Table & Filter Fix --- */
+
+.table-container { 
+    width: 100%; 
+    max-height: 400px; 
+    overflow-y: auto;  
+    overflow-x: auto;  
+    border-radius: 8px; 
+    border: 1px solid var(--border); 
+    background: #111827;
+}
+
+
+/* Mobile Dropdown Fix */
+.dropdown-content { 
+    display: none; 
+    position: absolute; 
+    background: #1f2937; 
+    min-width: 160px; 
+    z-index: 100; 
+    border: 1px solid var(--border); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+
+/* On mobile, we use the active class or hover for better compatibility */
+.dropdown:hover .dropdown-content, .dropdown:active .dropdown-content { 
+    display: block; 
 }
