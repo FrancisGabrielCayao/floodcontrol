@@ -1,11 +1,14 @@
 let stats = { total: 0, rain: 0, danger: 0, pump: 0, buzzer: 0 };
 let activeFilters = { sensor: 'all', actuator: 'all', state: 'all' };
 
-// Sidebar Logic
+
+// --- Sidebar Controls ---
+
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('active');
     document.getElementById('overlay').classList.toggle('active');
 }
+
 
 function openTab(evt, tabName) {
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
@@ -14,25 +17,43 @@ function openTab(evt, tabName) {
     evt.currentTarget.classList.add("active");
 }
 
-// Chart Configurations
+
+// --- Chart Setup (Fixed Colors) ---
+
 const waterChart = new Chart(document.getElementById('waterChart').getContext('2d'), {
     type: 'line',
-    data: { labels: [], datasets: [{ data: [], borderColor: '#ef4444', stepped: true, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.1)' }] },
+    data: { 
+        labels: [], 
+        datasets: [{ 
+            data: [], 
+            borderColor: '#ef4444', 
+            stepped: true, 
+            fill: true, 
+            backgroundColor: 'rgba(239, 68, 68, 0.2)' 
+        }] 
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
 });
+
 
 const rainChart = new Chart(document.getElementById('rainChart').getContext('2d'), {
     type: 'bar',
-    data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+    data: { 
+        labels: [], 
+        datasets: [{ data: [], backgroundColor: [] }] 
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
 });
 
-// Filtering Logic
+
+// --- Filtering & Table Updates ---
+
 function applyFilter(cat, type, label) {
     activeFilters[cat] = type;
     document.getElementById('lbl-' + cat).innerText = label;
     updateAllRows();
 }
+
 
 function updateAllRows() {
     const rows = document.querySelectorAll('#log-body tr');
@@ -52,6 +73,7 @@ function updateAllRows() {
     });
 }
 
+
 function addLog(w, r, p, b, stateLabel, rawState) {
     const time = new Date().toLocaleTimeString([], { hour12: false });
     const row = document.createElement('tr');
@@ -62,52 +84,52 @@ function addLog(w, r, p, b, stateLabel, rawState) {
     
     const body = document.getElementById('log-body');
     body.prepend(row);
-    if (body.children.length > 50) body.lastElementChild.remove();
+    if (body.children.length > 30) body.lastElementChild.remove(); // Capped at 30 for mobile speed
     updateAllRows();
 }
 
-// Data Loop
+
+// --- Main Loop ---
+
 setInterval(() => {
     const timeStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const isWater = Math.random() > 0.90;
     const rainVal = Math.floor(Math.random() * 100);
 
-    // Chart Color Logic
+
     let rColor = rainVal > 75 ? "#ef4444" : (rainVal > 25 ? "#f59e0b" : "#10b981");
     let rText = rainVal > 75 ? "HEAVY" : (rainVal > 25 ? "MODERATE" : "DRY");
+
 
     // Update Rain Chart
     rainChart.data.labels.push(timeStamp);
     rainChart.data.datasets[0].data.push(rainVal);
-    rainChart.data.datasets[0].backgroundColor.push(rColor); // Fix color
-    if (rainChart.data.labels.length > 10) {
+    rainChart.data.datasets[0].backgroundColor.push(rColor);
+    if (rainChart.data.labels.length > 8) {
         rainChart.data.labels.shift();
         rainChart.data.datasets[0].data.shift();
         rainChart.data.datasets[0].backgroundColor.shift();
     }
-    rainChart.update();
+    rainChart.update('none');
+
 
     // Update Water Chart
     waterChart.data.labels.push(timeStamp);
     waterChart.data.datasets[0].data.push(isWater ? 1 : 0);
-    if (waterChart.data.labels.length > 10) {
+    if (waterChart.data.labels.length > 8) {
         waterChart.data.labels.shift();
         waterChart.data.datasets[0].data.shift();
     }
-    waterChart.update();
+    waterChart.update('none');
 
-    // UI Updates
-    document.getElementById('w-status').innerText = isWater ? "ALERT" : "LOW";
-    document.getElementById('w-status').style.color = isWater ? "var(--danger)" : "var(--accent)";
-    document.getElementById('r-status').innerText = rText;
-    document.getElementById('r-status').style.color = rColor;
 
     addLog(isWater ? "ALERT" : "LOW", rText, "OFF", "OFF", isWater ? "ALERT" : "SAFE", isWater ? "ALERT" : "SAFE");
 }, 5000);
 
+
 function handleSwitch(id) {
     const btn = document.getElementById('sw-' + id);
     const isOn = btn.classList.toggle('on');
+    btn.classList.toggle('off', !isOn);
     btn.innerText = isOn ? "ON" : "OFF";
-    btn.className = isOn ? "toggle-btn on" : "toggle-btn off";
 }
