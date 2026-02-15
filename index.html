@@ -2,12 +2,10 @@
 <html lang="en">
 <head>
     <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0b0e14">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FloodControl Pro | Modular</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,19 +20,26 @@
     </nav>
 
     <aside id="sidebar" class="sidebar">
+        <button class="close-sidebar" onclick="toggleSidebar()">✕</button>
+
         <div class="tab-nav">
             <button class="tab-btn active" onclick="openTab(event, 'act-view')">Actuators</button>
             <button class="tab-btn" onclick="openTab(event, 'set-view')">Settings</button>
         </div>
+
         <div id="act-view" class="tab-content active">
-            <p>Buzzer</p><button id="sw-buzzer" class="toggle-btn off" onclick="handleSwitch('buzzer')">OFF</button>
-            <p style="margin-top: 20px;">Water Pump</p><button id="sw-pump" class="toggle-btn off" onclick="handleSwitch('pump')">OFF</button>
+            <p>Buzzer</p>
+            <button id="sw-buzzer" class="toggle-btn off" onclick="handleSwitch('buzzer')">OFF</button>
+            <p style="margin-top: 20px;">Water Pump</p>
+            <button id="sw-pump" class="toggle-btn off" onclick="handleSwitch('pump')">OFF</button>
         </div>
+
         <div id="set-view" class="tab-content">
             <p>Battery Health</p>
             <div style="height:120px"><canvas id="batteryChart"></canvas></div>
             <div style="margin-top: 20px; padding: 10px; background: #1f2937; border-radius: 8px; text-align: center;">
-                <small>System Uptime</small><h3 id="uptime-display" style="margin: 5px 0;">00:00:00</h3>
+                <small>System Uptime</small>
+                <h3 id="uptime-display">00:00:00</h3>
             </div>
         </div>
     </aside>
