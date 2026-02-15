@@ -1,0 +1,15 @@
+{
+  "short_name": "FloodControl",
+  "name": "FloodControl Pro Dashboard",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3208/3208752.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#0b0e14",
+  "display": "standalone",
+  "theme_color": "#10b981"
+}

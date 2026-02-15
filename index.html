@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0e14">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloodControl Pro | Modular</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+
+    <nav class="navbar">
+        <button class="menu-btn" onclick="toggleSidebar()">☰ MENU</button>
+        <div style="font-weight:bold">FLOODCONTROL COMMAND</div>
+        <div style="color:var(--accent); font-size: 0.8rem;">LIVE ●</div>
+    </nav>
+
+    <aside id="sidebar" class="sidebar">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="openTab(event, 'act-view')">Actuators</button>
+            <button class="tab-btn" onclick="openTab(event, 'set-view')">Settings</button>
+        </div>
+        <div id="act-view" class="tab-content active">
+            <p>Buzzer</p><button id="sw-buzzer" class="toggle-btn off" onclick="handleSwitch('buzzer')">OFF</button>
+            <p style="margin-top: 20px;">Water Pump</p><button id="sw-pump" class="toggle-btn off" onclick="handleSwitch('pump')">OFF</button>
+        </div>
+        <div id="set-view" class="tab-content">
+            <p>Battery Health</p>
+            <div style="height:120px"><canvas id="batteryChart"></canvas></div>
+            <div style="margin-top: 20px; padding: 10px; background: #1f2937; border-radius: 8px; text-align: center;">
+                <small>System Uptime</small><h3 id="uptime-display" style="margin: 5px 0;">00:00:00</h3>
+            </div>
+        </div>
+    </aside>
+
+    <main class="content-area">
+        <div class="status-grid">
+            <div class="glass-card">
+                <h3>Water Contact Sensor</h3>
+                <h2 id="w-status" style="color:var(--accent)">LOW</h2>
+                <div class="chart-box"><canvas id="waterChart"></canvas></div>
+            </div>
+            <div class="glass-card">
+                <h3>Rain Intensity</h3>
+                <h2 id="r-status" style="color:var(--accent)">DRY</h2>
+                <div class="chart-box"><canvas id="rainChart"></canvas></div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h3>Quick Report Summary</h3>
+            <div class="report-grid">
+                <div class="rep-item"><small>Total Contacts</small><p id="q-total">0</p></div>
+                <div class="rep-item"><small>Rain Events</small><p id="q-rain">0</p></div>
+                <div class="rep-item" style="border-bottom-color:var(--danger)"><small>Alerts</small><p id="q-danger">0</p></div>
+                <div class="rep-item"><small>Pump Runs</small><p id="q-pump">0</p></div>
+                <div class="rep-item"><small>Buzzer Triggers</small><p id="q-buzzer">0</p></div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <div class="filter-header">
+                <h3 style="margin:0">Live Event History</h3>
+                <div style="display:flex; gap:8px">
+                    <div class="dropdown">
+                        <button class="drop-btn" id="lbl-sensor">Sensors: All</button>
+                        <div class="dropdown-content">
+                            <a onclick="applyFilter('sensor', 'all', 'Sensors: All')">All Sensors</a>
+                            <a onclick="applyFilter('sensor', 'water', 'Water Only')">Water Only</a>
+                            <a onclick="applyFilter('sensor', 'rain', 'Rain Only')">Rain Only</a>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="drop-btn" id="lbl-actuator">Actuators: All</button>
+                        <div class="dropdown-content">
+                            <a onclick="applyFilter('actuator', 'all', 'Actuators: All')">All Actuators</a>
+                            <a onclick="applyFilter('actuator', 'pump', 'Pump Only')">Pump Only</a>
+                            <a onclick="applyFilter('actuator', 'buzzer', 'Buzzer Only')">Buzzer Only</a>
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="drop-btn" id="lbl-state">State: All</button>
+                        <div class="dropdown-content">
+                            <a onclick="applyFilter('state', 'all', 'State: All')">All States</a>
+                            <a onclick="applyFilter('state', 'SAFE', 'Safe Only')">Safe Only</a>
+                            <a onclick="applyFilter('state', 'ALERT', 'Alert Only')">Alert Only</a>
+                            <a onclick="applyFilter('state', 'DANGER', 'Danger Only')">Danger Only</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TIME</th>
+                            <th>WATER</th>
+                            <th>RAIN</th>
+                            <th>PUMP</th>
+                            <th>BUZZER</th>
+                            <th>OVERALL STATE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
