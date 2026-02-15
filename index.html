@@ -1,41 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FloodControl Pro | Modular</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0b0e14">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>FloodControl Pro | Modular</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        /* This specific CSS fix handles the "Black Bar" issue */
-        :root {
-            --bg-color: #0b0e14;
-        }
-        
-        body {
-            background-color: var(--bg-color);
-            /* This ensures the content starts below the phone's notch/clock */
-            padding-top: env(safe-area-inset-top);
-            margin: 0;
-            overflow-x: hidden;
-        }
-
-        .navbar {
-            /* Makes the navbar feel integrated with the top of the phone */
-            padding-top: 10px; 
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-    </style>
 </head>
 <body>
     <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
@@ -101,7 +76,24 @@
                             <a onclick="applyFilter('sensor', 'rain', 'Rain Only')">Rain Only</a>
                         </div>
                     </div>
+                    <div class="dropdown">
+                        <button class="drop-btn" id="lbl-actuator">Actuators: All</button>
+                        <div class="dropdown-content">
+                            <a onclick="applyFilter('actuator', 'all', 'Actuators: All')">All Actuators</a>
+                            <a onclick="applyFilter('actuator', 'pump', 'Pump Only')">Pump Only</a>
+                            <a onclick="applyFilter('actuator', 'buzzer', 'Buzzer Only')">Buzzer Only</a>
+                        </div>
                     </div>
+                    <div class="dropdown">
+                        <button class="drop-btn" id="lbl-state">State: All</button>
+                        <div class="dropdown-content">
+                            <a onclick="applyFilter('state', 'all', 'State: All')">All States</a>
+                            <a onclick="applyFilter('state', 'SAFE', 'Safe Only')">Safe Only</a>
+                            <a onclick="applyFilter('state', 'ALERT', 'Alert Only')">Alert Only</a>
+                            <a onclick="applyFilter('state', 'DANGER', 'Danger Only')">Danger Only</a>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="table-container">
                 <table>
@@ -112,7 +104,7 @@
                             <th>RAIN</th>
                             <th>PUMP</th>
                             <th>BUZZER</th>
-                            <th>STATE</th>
+                            <th>OVERALL STATE</th>
                         </tr>
                     </thead>
                     <tbody id="log-body"></tbody>
