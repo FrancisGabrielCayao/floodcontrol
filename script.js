@@ -17,16 +17,38 @@ function openTab(evt, tabName) {
 }
 
 // --- Chart Initializations ---
+// FIX: Added maintainAspectRatio: false to all charts
 const waterChart = new Chart(document.getElementById('waterChart').getContext('2d'), {
     type: 'line',
     data: { labels: [], datasets: [{ label: 'Water', data: [], borderColor: '#ef4444', stepped: true, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.1)' }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 1.1 }, x: { ticks: { color: '#94a3b8', font: { size: 10 } } } } }
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        scales: { 
+            y: { min: 0, max: 1.1 }, 
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } } } 
+        } 
+    }
 });
 
 const rainChart = new Chart(document.getElementById('rainChart').getContext('2d'), {
     type: 'bar',
     data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 5 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100 }, x: { ticks: { color: '#94a3b8', font: { size: 10 } } } } }
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        plugins: { legend: { display: false } }, 
+        scales: { 
+            y: { min: 0, max: 100 }, 
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } } } 
+        } 
+    }
+});
+
+const batteryChart = new Chart(document.getElementById('batteryChart').getContext('2d'), {
+    type: 'doughnut',
+    data: { datasets: [{ data: [94, 6], backgroundColor: ['#10b981', '#1f2937'], borderWidth: 0 }] },
+    options: { cutout: '80%', responsive: true, maintainAspectRatio: false }
 });
 
 // --- UI Logic & Filtering ---
@@ -41,12 +63,6 @@ function updateAllRows() {
         const data = JSON.parse(row.getAttribute('data-full'));
         const showRow = (activeFilters.state === 'all' || activeFilters.state === data.rawState);
         row.style.display = showRow ? "" : "none";
-        if(showRow) {
-            row.children[1].innerHTML = (activeFilters.sensor === 'all' || activeFilters.sensor === 'water') ? data.water : "-";
-            row.children[2].innerHTML = (activeFilters.sensor === 'all' || activeFilters.sensor === 'rain') ? data.rain : "-";
-            row.children[3].innerHTML = (activeFilters.actuator === 'all' || activeFilters.actuator === 'pump') ? data.pump : "-";
-            row.children[4].innerHTML = (activeFilters.actuator === 'all' || activeFilters.actuator === 'buzzer') ? data.buzzer : "-";
-        }
     });
 }
 
@@ -56,7 +72,7 @@ function addLog(w, r, p, b, stateLabel, rawState) {
     row.setAttribute('data-full', JSON.stringify({ water:w, rain:r, pump:p, buzzer:b, rawState:rawState }));
     
     let stateColor = rawState === 'DANGER' ? 'var(--danger)' : rawState === 'ALERT' ? 'var(--warning)' : 'var(--accent)';
-    row.innerHTML = `<td>${time}</td><td></td><td></td><td></td><td></td><td style="color:${stateColor}; font-weight:bold">${stateLabel}</td>`;
+    row.innerHTML = `<td>${time}</td><td>${w}</td><td>${r}</td><td>${p}</td><td>${b}</td><td style="color:${stateColor}; font-weight:bold">${stateLabel}</td>`;
     
     const body = document.getElementById('log-body');
     body.prepend(row);
@@ -70,29 +86,29 @@ setInterval(() => {
     const isWater = Math.random() > 0.90;
     const rainVal = Math.floor(Math.random() * 100);
 
-    // Water Status
+    // Water Status UI
     const wStatus = document.getElementById('w-status');
     let wLog;
     if(isWater) { 
         wStatus.innerText = "ALERT"; wStatus.className = "blink-danger"; 
         stats.total++; stats.danger++;
-        wLog = `<span style="color:var(--danger); font-weight:bold">ALERT</span>`;
+        wLog = `<span style="color:var(--danger)">ALERT</span>`;
     } else { 
         wStatus.innerText = "LOW"; wStatus.className = ""; wStatus.style.color = "var(--accent)"; 
-        wLog = `<span style="color:var(--accent)">LOW</span>`;
+        wLog = `LOW`;
     }
 
-    // Rain Status
+    // Rain Status UI
     const rStatus = document.getElementById('r-status');
     let rText, rHex, rColor;
-    if(rainVal > 75) { rText = "HEAVY RAIN"; rHex = "#ef4444"; rColor = "var(--danger)"; stats.rain++; }
-    else if(rainVal > 25) { rText = "SLIGHT RAIN"; rHex = "#f59e0b"; rColor = "var(--warning)"; stats.rain++; }
+    if(rainVal > 75) { rText = "HEAVY"; rHex = "#ef4444"; rColor = "var(--danger)"; stats.rain++; }
+    else if(rainVal > 25) { rText = "MODERATE"; rHex = "#f59e0b"; rColor = "var(--warning)"; stats.rain++; }
     else { rText = "DRY"; rHex = "#10b981"; rColor = "var(--accent)"; }
     rStatus.innerText = rText; rStatus.style.color = rColor;
 
-    // Overall State Logic
+    // Overall State
     let fLabel, fRaw;
-    if(isWater && rainVal > 75) { fLabel = "!!! DANGER !!!"; fRaw = "DANGER"; }
+    if(isWater && rainVal > 75) { fLabel = "DANGER"; fRaw = "DANGER"; }
     else if(isWater || rainVal > 25) { fLabel = "ALERT"; fRaw = "ALERT"; }
     else { fLabel = "SAFE"; fRaw = "SAFE"; }
 
@@ -112,14 +128,14 @@ setInterval(() => {
     rainChart.data.datasets[0].backgroundColor.push(rHex);
     rainChart.update();
 
-    // Stats Sync
+    // Stats Update
     document.getElementById('q-total').innerText = stats.total;
     document.getElementById('q-rain').innerText = stats.rain;
     document.getElementById('q-danger').innerText = stats.danger;
     document.getElementById('q-pump').innerText = stats.pump;
     document.getElementById('q-buzzer').innerText = stats.buzzer;
 
-    addLog(wLog, `<span style="color:${rColor}">${rText}</span>`, document.getElementById('sw-pump').innerText, document.getElementById('sw-buzzer').innerText, fLabel, fRaw);
+    addLog(wLog, rText, document.getElementById('sw-pump').innerText, document.getElementById('sw-buzzer').innerText, fLabel, fRaw);
 }, 5000);
 
 // --- Actuator Control ---
@@ -128,7 +144,6 @@ function handleSwitch(id) {
     const isOn = btn.classList.toggle('on');
     btn.innerText = isOn ? "ON" : "OFF";
     if(isOn) stats[id]++;
-    addLog("-", "-", btn.innerText, "-", "MANUAL", "SAFE");
 }
 
 // --- Battery & Uptime ---
@@ -136,16 +151,3 @@ setInterval(() => {
     let s = Math.floor((Date.now() - startTime) / 1000);
     document.getElementById('uptime-display').innerText = new Date(s * 1000).toISOString().substr(11, 8);
 }, 1000);
-
-new Chart(document.getElementById('batteryChart').getContext('2d'), {
-    type: 'doughnut',
-    data: { datasets: [{ data: [94, 6], backgroundColor: ['#10b981', '#1f2937'], borderWidth: 0 }] },
-    options: { cutout: '80%', responsive: true, maintainAspectRatio: false }
-});
-
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
-  });
-}
