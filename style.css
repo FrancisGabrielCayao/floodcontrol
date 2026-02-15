@@ -1,4 +1,4 @@
-:root {
+:root {:root {
     --bg: #0b0e14;
     --card: #161b26;
     --sidebar-bg: #111827;
@@ -9,7 +9,6 @@
     --border: #2d3748;
 }
 
-/* Base Setup */
 * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent; 
@@ -19,9 +18,8 @@ body {
     margin: 0; 
     background: var(--bg); 
     color: var(--text); 
-    font-family: 'Segoe UI', Roboto, sans-serif; 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
     overflow-x: hidden; 
-    /* Fix for PWA status bar */
     padding-top: env(safe-area-inset-top);
 }
 
@@ -38,49 +36,65 @@ body {
     top: 0; 
     z-index: 1000;
 }
+
 .menu-btn { 
     background: var(--accent); 
     border: none; 
     color: #000; 
-    padding: 8px 15px; 
-    cursor: pointer; 
+    padding: 8px 12px; 
     border-radius: 6px; 
     font-weight: bold; 
-    font-size: 1rem; 
 }
 
-/* Sidebar & Overlay */
+/* Sidebar */
 .overlay { 
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.8); display: none; z-index: 1500; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.8); 
+    display: none; 
+    z-index: 1500; 
     backdrop-filter: blur(2px); 
 }
-.overlay.active { display: block; }
+
+.overlay.active { 
+    display: block; 
+}
 
 .sidebar {
-    position: fixed; top: 0; left: -300px; width: 280px; height: 100%;
-    background: var(--sidebar-bg); z-index: 2000; 
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 20px; border-right: 1px solid var(--border);
+    position: fixed; 
+    top: 0; 
+    left: -300px; 
+    width: 280px; 
+    height: 100%;
+    background: var(--sidebar-bg); 
+    z-index: 2000; 
+    transition: 0.3s;
+    padding: 20px; 
+    border-right: 1px solid var(--border);
 }
-.sidebar.active { left: 0; }
 
-/* Main Layout - THE FIX FOR SQUEEZING */
+.sidebar.active { 
+    left: 0; 
+}
+
+/* Layout - Stacks on mobile, splits on desktop */
 .content-area { 
-    padding: 15px; 
+    padding: 12px; 
     max-width: 1200px; 
     margin: auto; 
 }
 
 .status-grid { 
     display: grid; 
-    grid-template-columns: 1fr; /* Stacked on mobile */
+    grid-template-columns: 1fr; 
     gap: 15px; 
     margin-bottom: 15px; 
 }
 
-/* When the screen is wider than 800px (Tablets/PC), show 2 columns */
-@media (min-width: 800px) {
+@media (min-width: 850px) {
     .status-grid { 
         grid-template-columns: 1fr 1fr; 
     }
@@ -91,24 +105,27 @@ body {
     border: 1px solid var(--border); 
     border-radius: 12px; 
     padding: 15px; 
+    position: relative; 
 }
 
 .chart-box { 
-    height: 220px; /* Force visibility */
+    height: 220px; 
     width: 100%; 
-    margin-top: 15px; 
-    position: relative;
+    margin-top: 10px; 
+    position: relative; 
 }
 
-/* Report Summary Fix */
+/* Report Summary - Fixed 2-column grid for mobile */
 .report-grid { 
     display: grid; 
-    grid-template-columns: repeat(2, 1fr); /* 2x3 on mobile */
+    grid-template-columns: repeat(2, 1fr); 
     gap: 10px; 
 }
 
-@media (min-width: 600px) {
-    .report-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+@media (min-width: 700px) {
+    .report-grid { 
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+    }
 }
 
 .rep-item { 
@@ -119,35 +136,106 @@ body {
     border-bottom: 3px solid var(--border); 
 }
 
-/* Table Management */
+.rep-item p { 
+    font-size: 1.2rem; 
+    font-weight: bold; 
+    color: var(--accent); 
+    margin: 5px 0; 
+}
+
+/* Filters */
+.filter-header { 
+    margin-bottom: 15px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.filter-controls { 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: wrap; 
+}
+
+.dropdown { 
+    position: relative; 
+    display: inline-block; 
+}
+
+.drop-btn { 
+    background: #1f2937; 
+    color: white; 
+    padding: 8px 12px; 
+    border: 1px solid var(--border); 
+    border-radius: 6px; 
+    font-size: 0.8rem; 
+    cursor: pointer; 
+}
+
+.dropdown-content { 
+    display: none; 
+    position: absolute; 
+    background: #1f2937; 
+    min-width: 140px; 
+    z-index: 100; 
+    border: 1px solid var(--border); 
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+}
+
+.dropdown:hover .dropdown-content { 
+    display: block; 
+}
+
+.dropdown-content a { 
+    color: white; 
+    padding: 12px; 
+    text-decoration: none; 
+    display: block; 
+    font-size: 0.85rem; 
+    border-bottom: 1px solid #2d3748; 
+}
+
+/* Table */
 .table-container { 
-    width: 100%;
-    overflow-x: auto; /* Allows swiping left/right on table */
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    width: 100%; 
+    overflow-x: auto; 
+    border-radius: 8px; 
+    border: 1px solid var(--border); 
+    -webkit-overflow-scrolling: touch; 
 }
 
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    min-width: 500px; /* Prevents text from squishing inside table */
+    min-width: 600px; 
 }
 
 th, td { 
     padding: 12px; 
     text-align: left; 
-    font-size: 0.85rem; 
+    font-size: 0.8rem; 
     border-bottom: 1px solid var(--border); 
+    white-space: nowrap; 
 }
 
-/* Buttons */
 .toggle-btn { 
-    width: 100%; padding: 15px; border: none; border-radius: 8px; 
-    font-weight: bold; cursor: pointer; margin-top: 10px; 
+    width: 100%; 
+    padding: 15px; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    margin-top: 10px; 
+    font-size: 1rem; 
+    cursor: pointer; 
 }
-.toggle-btn.off { background: #374151; color: white; }
-.toggle-btn.on { background: var(--accent); color: #000; }
 
-.blink-danger { animation: blink 1s infinite; color: var(--danger) !important; }
-@keyframes blink { 50% { opacity: 0.5; } }
+.toggle-btn.off { 
+    background: #374151; 
+    color: white; 
+}
+
+.toggle-btn.on { 
+    background: var(--accent); 
+    color: #000; 
+    box-shadow: 0 0 10px var(--accent); 
+}
