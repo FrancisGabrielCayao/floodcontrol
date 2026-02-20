@@ -1,4 +1,4 @@
-// --- Global Data & State ---
+// --- Global Data & State ---// --- Global Data & State ---
 let stats = { 
     total: 0, 
     rain: 0, 
@@ -60,7 +60,7 @@ const batteryChart = new Chart(document.getElementById('batteryChart').getContex
     type: 'doughnut',
     data: { 
         datasets: [{ 
-            data: [94, 6], 
+            data: [100, 0], 
             backgroundColor: ['#10b981', '#1f2937'], 
             borderWidth: 0 
         }] 
@@ -78,19 +78,13 @@ function applyFilter(cat, type, label) {
 function updateAllRows() {
     document.querySelectorAll('#log-body tr').forEach(row => {
         const data = JSON.parse(row.getAttribute('data-full'));
-        
-        // Match logic based on state
         const stateMatch = (activeFilters.state === 'all' || activeFilters.state === data.rawState);
-        
         const isVisible = stateMatch;
         row.style.display = isVisible ? "" : "none";
         
         if (isVisible) {
-            // Sensor Logic: Show "-" if the specific opposite sensor is selected
             row.children[1].innerHTML = (activeFilters.sensor === 'all' || activeFilters.sensor === 'water') ? data.water : "-";
             row.children[2].innerHTML = (activeFilters.sensor === 'all' || activeFilters.sensor === 'rain') ? data.rain : "-";
-            
-            // Actuator Logic: Show "-" if the specific opposite actuator is selected
             row.children[3].innerHTML = (activeFilters.actuator === 'all' || activeFilters.actuator === 'pump') ? data.pump : "-";
             row.children[4].innerHTML = (activeFilters.actuator === 'all' || activeFilters.actuator === 'buzzer') ? data.buzzer : "-";
         }
@@ -100,8 +94,6 @@ function updateAllRows() {
 function addLog(w, r, p, b, stateLabel, rawState) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const row = document.createElement('tr');
-    
-    // Store data for filtering later
     row.setAttribute('data-full', JSON.stringify({ water: w, rain: r, pump: p, buzzer: b, rawState: rawState }));
     
     let stateColor = rawState === 'DANGER' ? 'var(--danger)' : rawState === 'ALERT' ? 'var(--warning)' : 'var(--accent)';
@@ -127,7 +119,6 @@ setInterval(() => {
     const isWater = Math.random() > 0.90;
     const rainVal = Math.floor(Math.random() * 100);
 
-    // Water Logic
     const wStatus = document.getElementById('w-status');
     let wLog;
     if (isWater) { 
@@ -142,7 +133,6 @@ setInterval(() => {
         wLog = `<span style="color:var(--accent)">LOW</span>`;
     }
 
-    // Rain Logic
     const rStatus = document.getElementById('r-status');
     let rText, rHex, rColor;
     if (rainVal > 75) { 
@@ -155,12 +145,11 @@ setInterval(() => {
     rStatus.innerText = rText; 
     rStatus.style.color = rColor;
 
-    // Overall State and Quick Summary Tracking
     let fLabel, fRaw;
     if (isWater && rainVal > 75) { 
         fLabel = "!!! DANGER !!!"; 
         fRaw = "DANGER"; 
-        stats.danger++; // Increment Danger ONLY when both sensors trigger Danger state
+        stats.danger++;
     } else if (isWater || rainVal > 25) { 
         fLabel = "ALERT"; 
         fRaw = "ALERT"; 
@@ -169,7 +158,6 @@ setInterval(() => {
         fRaw = "SAFE"; 
     }
 
-    // Graph Updates
     if (waterChart.data.labels.length > 10) { 
         waterChart.data.labels.shift(); 
         waterChart.data.datasets[0].data.shift(); 
@@ -188,21 +176,13 @@ setInterval(() => {
     rainChart.data.datasets[0].backgroundColor.push(rHex);
     rainChart.update();
 
-    // Sync Stats to UI
     document.getElementById('q-total').innerText = stats.total;
     document.getElementById('q-rain').innerText = stats.rain;
     document.getElementById('q-danger').innerText = stats.danger;
     document.getElementById('q-pump').innerText = stats.pump;
     document.getElementById('q-buzzer').innerText = stats.buzzer;
 
-    addLog(
-        wLog, 
-        `<span style="color:${rColor}">${rText}</span>`, 
-        document.getElementById('sw-pump').innerText, 
-        document.getElementById('sw-buzzer').innerText, 
-        fLabel, 
-        fRaw
-    );
+    addLog(wLog, `<span style="color:${rColor}">${rText}</span>`, document.getElementById('sw-pump').innerText, document.getElementById('sw-buzzer').innerText, fLabel, fRaw);
 }, 5000);
 
 // --- Actuator Control ---
@@ -219,3 +199,39 @@ setInterval(() => {
     let s = Math.floor((Date.now() - startTime) / 1000);
     document.getElementById('uptime-display').innerText = new Date(s * 1000).toISOString().substr(11, 8);
 }, 1000);
+
+/**
+ * --- ADDED: ESP32 Battery Integration ---
+ * Hardware: Pin 33, 2x 100k Resistors (1:1 Voltage Divider)
+ */
+function updateBatteryFromESP32(adcValue) {
+    // 1. Convert 12-bit ADC (0-4095) to Voltage at Pin 33 (3.3V Reference)
+    const pinVoltage = (adcValue / 4095.0) * 3.3;
+
+    // 2. Adjust for 1:1 Voltage Divider (Pin voltage is half of Battery)
+    const batteryVoltage = pinVoltage * 2.0;
+
+    // 3. Convert Voltage to % (Assume Li-ion range 3.2V - 4.2V)
+    let percentage = ((batteryVoltage - 3.2) / (4.2 - 3.2)) * 100;
+    percentage = Math.max(0, Math.min(100, Math.round(percentage)));
+
+    // 4. Update Battery Chart
+    batteryChart.data.datasets[0].data = [percentage, 100 - percentage];
+    
+    // Dynamic Color Coding
+    if (percentage < 20) {
+        batteryChart.data.datasets[0].backgroundColor = ['#ef4444', '#1f2937']; // Red
+    } else if (percentage < 50) {
+        batteryChart.data.datasets[0].backgroundColor = ['#f59e0b', '#1f2937']; // Amber
+    } else {
+        batteryChart.data.datasets[0].backgroundColor = ['#10b981', '#1f2937']; // Green
+    }
+    batteryChart.update();
+}
+
+// Example listener if your ESP sends data via Web Messaging
+window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'BATTERY_UPDATE') {
+        updateBatteryFromESP32(event.data.value);
+    }
+});
