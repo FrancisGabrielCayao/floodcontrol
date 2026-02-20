@@ -1,31 +1,34 @@
 // --- 1. Global State & Config ---
-const ESP32_IP = "192.168.1.10"; // CHANGE THIS to your ESP32 IP
+const ESP32_IP = "192.168.1.10"; // REPLACE THIS with the IP from Serial Monitor
 const startTime = Date.now();
 
 let stats = { total: 0, rain: 0, danger: 0, pump: 0, buzzer: 0 };
 let activeFilters = { sensor: 'all', actuator: 'all', state: 'all' };
 
+
 // --- 2. Live Connection (ESP32) with Auto-Reconnect ---
 let source;
 
 function connectESP32() {
-    if (source) source.close(); 
+    if (source) source.close();
+    
     source = new EventSource(`http://${ESP32_IP}/events`);
 
     source.addEventListener('battery_update', (e) => {
-        // This receives data based on the ESP32's 2-minute timer/change logic
         updateBatteryChart(parseInt(e.data));
+        console.log(`[Battery Sync] Received ADC: ${e.data}`);
     });
 
     source.onerror = () => {
         document.getElementById('connection-status').style.color = "gray";
         console.log("ESP32 Connection lost. Retrying in 5 seconds...");
         source.close();
-        setTimeout(connectESP32, 5000); 
+        setTimeout(connectESP32, 5000);
     };
 }
 
 connectESP32();
+
 
 // --- 3. Sidebar & Tab Navigation ---
 function toggleSidebar() {
@@ -36,9 +39,11 @@ function toggleSidebar() {
 function openTab(evt, tabName) {
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    
     document.getElementById(tabName).classList.add("active");
     evt.currentTarget.classList.add("active");
 }
+
 
 // --- 4. Chart Initializations ---
 
@@ -73,22 +78,23 @@ const batteryChart = new Chart(document.getElementById('batteryChart').getContex
     options: { cutout: '80%', responsive: true, maintainAspectRatio: false }
 });
 
+
 // --- 5. Battery & UI Logic ---
 
 function updateBatteryChart(adcValue) {
     const pinVoltage = (adcValue / 4095.0) * 3.3;
     const batteryVoltage = pinVoltage * 2.0; 
     
-    // Adjusted thresholds: 4.2V full to 3.4V empty
+    // Thresholds: 4.2V (100%) to 3.4V (0%)
     let percentage = Math.round(((batteryVoltage - 3.4) / (4.2 - 3.4)) * 100);
     percentage = Math.max(0, Math.min(100, percentage));
 
     batteryChart.data.datasets[0].data = [percentage, 100 - percentage];
+    
     batteryChart.data.datasets[0].backgroundColor[0] = 
         percentage < 20 ? '#ef4444' : percentage < 50 ? '#f59e0b' : '#10b981';
-        
+    
     batteryChart.update();
-    console.log(`[Battery Sync] ${percentage}% (${batteryVoltage.toFixed(2)}V)`);
 }
 
 function applyFilter(cat, type, label) {
@@ -129,11 +135,14 @@ function addLog(w, r, p, b, stateLabel, rawState) {
     
     const body = document.getElementById('log-body');
     body.prepend(row);
+    
     if (body.children.length > 50) body.lastElementChild.remove();
     updateAllRows();
 }
 
-// --- 6. Main Simulation Loop ---
+
+// --- 6. Main Simulation Loop (Every 5s) ---
+
 setInterval(() => {
     const timeStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const isWater = Math.random() > 0.90;
@@ -141,77 +150,76 @@ setInterval(() => {
 
     // Water UI Updates
     const wStatus = document.getElementById('w-status');
-    let wLog;
-    if (isWater) { 
-        wStatus.innerText = "ALERT"; 
-        wStatus.className = "blink-danger"; 
-        stats.total++; 
-        wLog = `<span style="color:var(--danger); font-weight:bold">ALERT</span>`;
-    } else { 
-        wStatus.innerText = "LOW"; 
-        wStatus.className = ""; 
-        wStatus.style.color = "var(--accent)"; 
-        wLog = `<span style="color:var(--accent)">LOW</span>`;
-    }
+    let wLog = isWater ? `<span style="color:var(--danger); font-weight:bold">ALERT</span>` : `<span style="color:var(--accent)">LOW</span>`;
+    
+    wStatus.innerText = isWater ? "ALERT" : "LOW";
+    wStatus.className = isWater ? "blink-danger" : "";
+    if (isWater) stats.total++;
 
     // Rain UI Updates
     const rStatus = document.getElementById('r-status');
-    let rText, rHex, rColor;
-    if (rainVal > 75) { 
-        rText = "HEAVY RAIN"; rHex = "#ef4444"; rColor = "var(--danger)"; stats.rain++; 
-    } else if (rainVal > 25) { 
-        rText = "SLIGHT RAIN"; rHex = "#f59e0b"; rColor = "var(--warning)"; stats.rain++; 
-    } else { 
-        rText = "DRY"; rHex = "#10b981"; rColor = "var(--accent)"; 
-    }
-    rStatus.innerText = rText; rStatus.style.color = rColor;
+    let rText = rainVal > 75 ? "HEAVY RAIN" : rainVal > 25 ? "SLIGHT RAIN" : "DRY";
+    let rColor = rainVal > 75 ? "var(--danger)" : rainVal > 25 ? "var(--warning)" : "var(--accent)";
+    let rHex = rainVal > 75 ? "#ef4444" : rainVal > 25 ? "#f59e0b" : "#10b981";
+    
+    rStatus.innerText = rText; 
+    rStatus.style.color = rColor;
+    if (rainVal > 25) stats.rain++;
 
-    // Overall State
-    let fLabel, fRaw;
-    if (isWater && rainVal > 75) { fLabel = "!!! DANGER !!!"; fRaw = "DANGER"; stats.danger++; }
-    else if (isWater || rainVal > 25) { fLabel = "ALERT"; fRaw = "ALERT"; }
-    else { fLabel = "SAFE"; fRaw = "SAFE"; }
+    // Overall State Logic
+    let fLabel = (isWater && rainVal > 75) ? "!!! DANGER !!!" : (isWater || rainVal > 25) ? "ALERT" : "SAFE";
+    let fRaw = (isWater && rainVal > 75) ? "DANGER" : (isWater || rainVal > 25) ? "ALERT" : "SAFE";
+    if (fRaw === "DANGER") stats.danger++;
 
-    // Chart Data Push
+    // Chart Data Handling
     [waterChart, rainChart].forEach(chart => {
-        if (chart.data.labels.length > 10) {
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.shift();
+        if (chart.data.labels.length > 10) { 
+            chart.data.labels.shift(); 
+            chart.data.datasets[0].data.shift(); 
             if(chart === rainChart) chart.data.datasets[0].backgroundColor.shift();
         }
     });
 
-    waterChart.data.labels.push(timeStamp);
-    waterChart.data.datasets[0].data.push(isWater ? 1 : 0);
+    waterChart.data.labels.push(timeStamp); 
+    waterChart.data.datasets[0].data.push(isWater ? 1 : 0); 
     waterChart.update();
 
-    rainChart.data.labels.push(timeStamp);
-    rainChart.data.datasets[0].data.push(rainVal);
+    rainChart.data.labels.push(timeStamp); 
+    rainChart.data.datasets[0].data.push(rainVal); 
     rainChart.data.datasets[0].backgroundColor.push(rHex);
     rainChart.update();
 
-    // Stats Update
-    ['total', 'rain', 'danger', 'pump', 'buzzer'].forEach(id => {
+    // Sync Stats Counter
+    ['total', 'rain', 'danger', 'pump', 'buzzer'].forEach(id => { 
         const el = document.getElementById('q-' + id);
-        if (el) el.innerText = stats[id];
+        if (el) el.innerText = stats[id]; 
     });
 
-    addLog(wLog, `<span style="color:${rColor}">${rText}</span>`, 
+    addLog(wLog, 
+           `<span style="color:${rColor}">${rText}</span>`, 
            document.getElementById('sw-pump').innerText, 
-           document.getElementById('sw-buzzer').innerText, fLabel, fRaw);
+           document.getElementById('sw-buzzer').innerText, 
+           fLabel, 
+           fRaw);
+
 }, 5000);
 
+
 // --- 7. Controls & Uptime ---
+
 function handleSwitch(id) {
     const btn = document.getElementById('sw-' + id);
     const isOn = btn.classList.toggle('on');
+    
     btn.classList.toggle('off', !isOn);
     btn.innerText = isOn ? "ON" : "OFF";
+    
     if (isOn) stats[id]++;
 }
 
 setInterval(() => {
     let s = Math.floor((Date.now() - startTime) / 1000);
     const uptimeEl = document.getElementById('uptime-display');
+    
     if (uptimeEl) uptimeEl.innerText = new Date(s * 1000).toISOString().substr(11, 8);
 }, 1000);
