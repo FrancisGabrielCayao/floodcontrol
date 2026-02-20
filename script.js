@@ -5,17 +5,27 @@ const startTime = Date.now();
 let stats = { total: 0, rain: 0, danger: 0, pump: 0, buzzer: 0 };
 let activeFilters = { sensor: 'all', actuator: 'all', state: 'all' };
 
-// --- 2. Live Connection (ESP32) ---
-const source = new EventSource(`http://${ESP32_IP}/events`);
+// --- 2. Live Connection (ESP32) with Auto-Reconnect ---
+let source;
 
-source.addEventListener('battery_update', (e) => {
-    updateBatteryChart(parseInt(e.data));
-});
+function connectESP32() {
+    if (source) source.close(); 
+    source = new EventSource(`http://${ESP32_IP}/events`);
 
-source.onerror = () => {
-    document.getElementById('connection-status').style.color = "gray";
-    console.log("Waiting for ESP32 connection...");
-};
+    source.addEventListener('battery_update', (e) => {
+        // This receives data based on the ESP32's 2-minute timer/change logic
+        updateBatteryChart(parseInt(e.data));
+    });
+
+    source.onerror = () => {
+        document.getElementById('connection-status').style.color = "gray";
+        console.log("ESP32 Connection lost. Retrying in 5 seconds...");
+        source.close();
+        setTimeout(connectESP32, 5000); 
+    };
+}
+
+connectESP32();
 
 // --- 3. Sidebar & Tab Navigation ---
 function toggleSidebar() {
@@ -69,7 +79,7 @@ function updateBatteryChart(adcValue) {
     const pinVoltage = (adcValue / 4095.0) * 3.3;
     const batteryVoltage = pinVoltage * 2.0; 
     
-    // Adjusted thresholds: 4.2V Full, 3.4V Empty
+    // Adjusted thresholds: 4.2V full to 3.4V empty
     let percentage = Math.round(((batteryVoltage - 3.4) / (4.2 - 3.4)) * 100);
     percentage = Math.max(0, Math.min(100, percentage));
 
@@ -182,7 +192,8 @@ setInterval(() => {
 
     // Stats Update
     ['total', 'rain', 'danger', 'pump', 'buzzer'].forEach(id => {
-        document.getElementById('q-' + id).innerText = stats[id];
+        const el = document.getElementById('q-' + id);
+        if (el) el.innerText = stats[id];
     });
 
     addLog(wLog, `<span style="color:${rColor}">${rText}</span>`, 
@@ -201,5 +212,6 @@ function handleSwitch(id) {
 
 setInterval(() => {
     let s = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById('uptime-display').innerText = new Date(s * 1000).toISOString().substr(11, 8);
+    const uptimeEl = document.getElementById('uptime-display');
+    if (uptimeEl) uptimeEl.innerText = new Date(s * 1000).toISOString().substr(11, 8);
 }, 1000);
